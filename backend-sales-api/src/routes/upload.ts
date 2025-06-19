@@ -1,10 +1,26 @@
 import express from "express";
 import multer from "multer";
-import { handleFileUpload } from "../controller/uploadController";
+import { handleUpload } from "../controller/uploadController";
+import { getJobStatus } from "../controller/statusController";
+import { authenticateApiKey } from "../services/authMiddleware"; 
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ storage: multer.memoryStorage() });
 
-router.post("/upload", upload.single("file"), handleFileUpload);
+// Helper to wrap async route handlers and forward errors to Express error handler
+const asyncHandler =
+  (fn: Function) =>
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
+// Add authenticateApiKey middleware before your route handlers
+router.post(
+  "/upload",
+  authenticateApiKey,
+  upload.single("file"),
+  asyncHandler(handleUpload)
+);
+router.get("/job-status/:id", authenticateApiKey, asyncHandler(getJobStatus));
 
 export default router;

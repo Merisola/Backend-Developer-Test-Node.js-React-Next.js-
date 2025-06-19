@@ -1,76 +1,32 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import multer from "multer";
 import cors from "cors";
 import path from "path";
-import fs from "fs/promises";
-import { parseCsv, aggregateSales } from "./services/csvProcessor";
-import { saveFile } from "./services/fileWriter";
+import { handleUpload } from "./controller/uploadController";
 import { errorHandler } from "./services/errorHandler";
+import downloadRoutes from "./routes/downloadRoutes";
 
 const app = express();
 const PORT = 3000;
 
-// Enable CORS for all origins (you can customize for production)
+// Enable CORS for all origins
 app.use(cors());
 
-// Serve static files (processed CSVs) publicly from /public
+// Serve static files (processed CSVs) from /public directory
 app.use("/public", express.static(path.resolve("./public")));
 
+app.use(downloadRoutes);
+
+// Configure multer for in-memory file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
-/**
- * POST /upload-csv
- * Handles CSV file upload, parsing, aggregation, and returns download URL.
- */
-app.post(
-  "/upload-csv",
-  upload.single("file"),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.file) {
-        res.status(400).json({ error: "No file uploaded" });
-        return;
-      }
+// POST route to handle CSV uploads and processing
+app.post("/upload-csv", upload.single("file"), handleUpload);
 
-      const { buffer, originalname } = req.file;
-      const csvString = buffer.toString();
-
-      // Parse CSV and aggregate sales per department
-      const records = parseCsv(csvString);
-      const aggregated = aggregateSales(records);
-
-      // Create CSV content for aggregated results
-      let csvOutput = "Department Name,Total Sales\n";
-      for (const [dept, total] of Object.entries(aggregated)) {
-        csvOutput += `${dept},${total}\n`;
-      }
-
-      // Ensure /public directory exists
-      const publicDir = path.resolve("./public");
-      await fs.mkdir(publicDir, { recursive: true });
-
-      // Save aggregated CSV file with a unique name
-      const timestamp = Date.now();
-      const savedFileName = `aggregated_${timestamp}_${originalname}`;
-      const savePath = path.join(publicDir, savedFileName);
-
-      await saveFile(Buffer.from(csvOutput), savePath);
-
-      console.log(`Aggregated file saved: ${savedFileName}`);
-
-      // Send back download URL to client
-      res.json({
-        downloadUrl: `http://localhost:${PORT}/public/${savedFileName}`,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// Centralized error handling middleware (logs and returns JSON error)
+// Global error handler middleware to catch and respond to errors
 app.use(errorHandler);
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });

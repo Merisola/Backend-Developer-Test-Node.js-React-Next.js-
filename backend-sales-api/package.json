@@ -4,7 +4,7 @@
   "description": "This project is a full-stack application that allows users to upload large CSV files containing departmental sales data, processes the data on the backend using streaming for memory efficiency, aggregates sales totals per department, and returns a downloadable CSV file with results. The frontend provides a simple UI for file upload and download.",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    "dev": "ts-node src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,10 +22,13 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "bullmq": "^5.54.3",
     "cors": "^2.8.5",
     "csv-parse": "^5.6.0",
     "csv-parser": "^3.2.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "ioredis": "^5.6.1",
     "multer": "^2.0.1",
     "uuid": "^11.1.0"
   }

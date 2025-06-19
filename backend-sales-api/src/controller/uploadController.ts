@@ -1,53 +1,58 @@
-import { Request, Response } from "express";
-import fs from "fs";
+import { Request, Response, NextFunction } from "express";
+import { Worker } from "worker_threads";
 import path from "path";
-import csvParser from "csv-parser";
-import { v4 as uuidv4 } from "uuid";
 
-export const handleFileUpload = async (
+/**
+ * Handles CSV file upload by offloading processing to a worker thread.
+ * Returns download URL upon successful processing or error on failure.
+ * @param req Express request, expects multer to attach `req.file`.
+ * @param res Express response for JSON output.
+ * @param next Express next middleware function for error handling.
+ */
+export const handleUpload = (
   req: Request,
-  res: Response
-): Promise<void> => {
-  const file = req.file;
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "No file uploaded" });
+      return;
+    }
 
-  if (!file) {
-    res.status(400).json({ error: "No file uploaded" });
-    return;
-  }
+    const csvString = req.file.buffer.toString();
+    const originalName = req.file.originalname;
 
-  const resultMap = new Map<string, number>();
-  const outputFileName = `${uuidv4()}.csv`;
-  const outputFilePath = path.join("uploads", outputFileName);
+    // Spawn a worker thread to handle CPU-heavy CSV parsing
+    const workerPath = path.resolve(__dirname, "../workers/csvWorker.js");
 
-  const readStream = fs.createReadStream(file.path);
-  const writeStream = fs.createWriteStream(outputFilePath);
-
-  writeStream.write("Department Name,Total Number of Sales\n");
-
-  readStream
-    .pipe(csvParser())
-    .on("data", (row) => {
-      const department = row["Department Name"];
-      const sales = parseInt(row["Number of Sales"], 10);
-
-      if (!isNaN(sales)) {
-        resultMap.set(department, (resultMap.get(department) || 0) + sales);
-      }
-    })
-    .on("end", () => {
-      for (const [department, totalSales] of resultMap.entries()) {
-        writeStream.write(`${department},${totalSales}\n`);
-      }
-
-      writeStream.end(() => {
-        res.status(200).json({
-          message: "File processed successfully",
-          downloadUrl: `http://localhost:3000/uploads/${outputFileName}`,
-        });
-      });
-    })
-    .on("error", (error) => {
-      console.error("CSV Parsing error:", error);
-      res.status(500).json({ error: "Failed to process file" });
+    const worker = new Worker(workerPath, {
+      workerData: { csvString, originalName },
     });
+
+    worker.on("message", (result) => {
+      if (result.success) {
+        res.status(200).json({ downloadUrl: result.downloadUrl });
+      } else {
+        res
+          .status(500)
+          .json({ error: result.error || "Unknown processing error" });
+      }
+      worker.terminate();
+    });
+
+    worker.on("error", (error) => {
+      console.error("Worker thread error:", error);
+      res.status(500).json({ error: error.message });
+      worker.terminate();
+    });
+
+    worker.on("exit", (code) => {
+      if (code !== 0) {
+        console.error(`Worker stopped with exit code ${code}`);
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
 };
