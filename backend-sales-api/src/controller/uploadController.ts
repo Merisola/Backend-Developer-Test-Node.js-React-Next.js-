@@ -20,10 +20,14 @@ export const handleUpload = (
       return;
     }
 
-    const csvString = req.file.buffer.toString();
+    // Support both memory and disk storage
+    const csvString =
+      req.file.buffer?.toString() ||
+      require("fs").readFileSync(req.file.path, "utf8");
+
     const originalName = req.file.originalname;
 
-    // Spawn a worker thread to handle CPU-heavy CSV parsing
+    // Path to compiled .js worker
     const workerPath = path.resolve(__dirname, "../workers/csvWorker.js");
 
     const worker = new Worker(workerPath, {
@@ -32,7 +36,11 @@ export const handleUpload = (
 
     worker.on("message", (result) => {
       if (result.success) {
-        res.status(200).json({ downloadUrl: result.downloadUrl });
+        res.status(200).json({
+          message: "File processed successfully",
+          downloadUrl: result.downloadUrl,
+          metrics: result.metrics, // Add metrics if available
+        });
       } else {
         res
           .status(500)

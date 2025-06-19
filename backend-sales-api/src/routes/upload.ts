@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { handleUpload } from "../controller/uploadController";
 import { getJobStatus } from "../controller/statusController";
-import { authenticateApiKey } from "../services/authMiddleware"; 
+import { authenticateApiKey } from "../services/authMiddleware";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -14,13 +14,15 @@ const asyncHandler =
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
-// Add authenticateApiKey middleware before your route handlers
+// Upload route (secure + memoryStorage)
 router.post(
   "/upload",
   authenticateApiKey,
   upload.single("file"),
   asyncHandler(handleUpload)
 );
+
+// Optional: Job status route (secure)
 router.get("/job-status/:id", authenticateApiKey, asyncHandler(getJobStatus));
 
 export default router;
