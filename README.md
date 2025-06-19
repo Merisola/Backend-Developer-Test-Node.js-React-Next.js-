@@ -57,7 +57,7 @@ backend/
 │   │   └── statusController.ts
 │   │
 │   ├── middleware/
-│   │   └── upload.ts           # Async wrapper for safe routing
+│   │   └── upload.ts           # Async error wrapper
 │   │
 │   ├── queues/
 │   │   ├── csvQueue.ts
@@ -74,8 +74,11 @@ backend/
 │   │   ├── fileWriter.ts
 │   │   └── errorHandler.ts
 │   │
-│   └── types/
-│       └── index.d.ts
+│   ├── types/
+│   │   └── index.d.ts
+│   │
+│   └── utils/                  # (Optional) filename generator, constants
+
 🧠 Algorithm & Design
 🔄 How it Works
 User uploads a .csv file
