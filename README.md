@@ -1,5 +1,5 @@
 📦 CSV Sales Processor – Backend Developer Project
-This project is a Node.js + TypeScript backend for processing large CSV files via streaming. It aggregates department sales, writes a downloadable CSV, and returns processing metrics.
+A Node.js + TypeScript backend that processes large CSV files using streaming. It aggregates department sales totals, generates a downloadable CSV, and returns performance metrics.
 
 🚀 How to Run the App
 1. Clone & Install
@@ -10,18 +10,18 @@ git clone https://github.com/your-username/csv-sales-processor.git
 cd csv-sales-processor/backend
 npm install
 2. Set Up Environment Variables
-Create a .env file in the backend root:
+Create a .env file in the backend directory:
 
 ini
 Copy
 Edit
 API_KEY=your_super_secret_key
-3. Start the Server (Dev Mode)
+3. Start the Server (Development Mode)
 bash
 Copy
 Edit
 npm run dev
-Your server will be running at:
+Server will be running at:
 📍 http://localhost:3000
 
 🧪 How to Test
@@ -35,8 +35,7 @@ bash
 Copy
 Edit
 npm run test:coverage
-Tests cover:
-
+Test Coverage Includes:
 csvProcessor.ts
 
 fileWriter.ts
@@ -44,7 +43,7 @@ fileWriter.ts
 Aggregation and parsing logic
 
 📂 File Structure
-pgsql
+bash
 Copy
 Edit
 backend/
@@ -58,7 +57,7 @@ backend/
 │   │   └── statusController.ts
 │   │
 │   ├── middleware/
-│   │   └── upload.ts           # Async error wrapper
+│   │   └── upload.ts           # Async wrapper for safe routing
 │   │
 │   ├── queues/
 │   │   ├── csvQueue.ts
@@ -75,33 +74,33 @@ backend/
 │   │   ├── fileWriter.ts
 │   │   └── errorHandler.ts
 │   │
-│   ├── types/
-│   │   └── index.d.ts
-│   │
-│   
+│   └── types/
+│       └── index.d.ts
 🧠 Algorithm & Design
 🔄 How it Works
 User uploads a .csv file
 
-csvProcessor.ts streams the CSV (via csv-parser)
+csvProcessor.ts streams and parses the file using csv-parser
 
-Rows are processed line-by-line, and sales are aggregated by department
+Each row is aggregated by department in a Map
 
-Results are passed to fileWriter.ts to generate a new CSV file
+fileWriter.ts generates a new CSV file
 
-The backend responds with:
+API responds with:
 
-A download URL
+✅ Download link
 
-Metrics: processing time, total departments
+✅ Metrics (processing time, department count)
 
 🧮 Efficiency Strategy
-✅ Memory Efficient
-Streaming with fs.createReadStream + csv-parser
+✅ Memory-Efficient Design
+CSV files are streamed using fs.createReadStream
 
-Write stream with fs.createWriteStream
+Processing is done line-by-line with csv-parser
 
-Only the aggregate Map is kept in memory
+Aggregated data is stored in memory using a Map
+
+Final file is written with fs.createWriteStream
 
 ✅ Time & Space Complexity
 Operation	Time	Space
@@ -109,28 +108,28 @@ CSV Streaming	O(n)	O(d)
 Aggregation	O(n)	O(d)
 File Writing	O(d)	O(d)
 
-n: number of rows
+n: number of rows in the CSV
 
-d: number of departments
+d: number of unique departments
 
 🔐 API Security
-All routes require a valid API key in the header:
+All routes are protected via API key header:
 
-makefile
+http
 Copy
 Edit
 x-api-key: your_super_secret_key
 🧪 Sample API Usage
-POST /upload
+📤 POST /upload
 bash
 Copy
 Edit
 curl -X POST http://localhost:3000/upload \
   -H "x-api-key: your_super_secret_key" \
   -F "file=@sales.csv"
-GET /download/:fileId
+📥 GET /download/:fileId
 bash
 Copy
 Edit
-curl http://localhost:3000/download/uuid-filename.csv \
+curl http://localhost:3000/download/your-file-id.csv \
   -H "x-api-key: your_super_secret_key"
