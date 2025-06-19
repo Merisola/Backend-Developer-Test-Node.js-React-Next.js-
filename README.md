@@ -1,51 +1,63 @@
-📦 CSV Sales Processor – Backend Developer Project
-A Node.js + TypeScript backend that processes large CSV files using streaming. It aggregates department sales totals, generates a downloadable CSV, and returns performance metrics.
+## 📦 CSV Sales Processor – Backend Developer Project
 
-🚀 How to Run the App
-1. Clone & Install
-bash
-Copy
-Edit
+This project is a Node.js + TypeScript backend for processing large CSV files via streaming. It aggregates department sales, writes a downloadable CSV, and returns processing metrics.
+
+---
+
+## 🚀 How to Run the App
+
+### 1. Clone & Install
+
+```bash
 git clone https://github.com/your-username/csv-sales-processor.git
 cd csv-sales-processor/backend
 npm install
-2. Set Up Environment Variables
-Create a .env file in the backend directory:
+```
 
-ini
-Copy
-Edit
+### 2. Set Up Environment Variables
+
+Create a `.env` file in the `backend` root:
+
+```ini
 API_KEY=your_super_secret_key
-3. Start the Server (Development Mode)
-bash
-Copy
-Edit
+```
+
+### 3. Start the Server (Dev Mode)
+
+```bash
 npm run dev
-Server will be running at:
-📍 http://localhost:3000
+```
 
-🧪 How to Test
-Run Unit Tests
-bash
-Copy
-Edit
+Your server will be running at:
+📍 `http://localhost:3000`
+
+---
+
+## 🧪 How to Test
+
+### Run Unit Tests
+
+```bash
 npm run test
-View Coverage Report
-bash
-Copy
-Edit
+```
+
+### View Coverage Report
+
+```bash
 npm run test:coverage
-Test Coverage Includes:
-csvProcessor.ts
+```
 
-fileWriter.ts
+Tests cover:
 
-Aggregation and parsing logic
+* `csvProcessor.ts`
+* `fileWriter.ts`
+* Aggregation and parsing logic
 
-📂 File Structure
-bash
-Copy
-Edit
+---
+
+## 📂 File Structure
+
+```
 backend/
 │
 ├── public/                     # Processed CSVs for download
@@ -78,61 +90,72 @@ backend/
 │   │   └── index.d.ts
 │   │
 │   └── utils/                  # (Optional) filename generator, constants
+```
 
-🧠 Algorithm & Design
-🔄 How it Works
-User uploads a .csv file
+---
 
-csvProcessor.ts streams and parses the file using csv-parser
+## 🧠 Algorithm & Design
 
-Each row is aggregated by department in a Map
+### 🔄 How it Works
 
-fileWriter.ts generates a new CSV file
+1. User uploads a `.csv` file
+2. `csvProcessor.ts` streams the CSV (via `csv-parser`)
+3. Rows are processed line-by-line, and sales are aggregated by department
+4. Results are passed to `fileWriter.ts` to generate a new CSV file
+5. The backend responds with:
 
-API responds with:
+   * A download URL
+   * Metrics: processing time, total departments
 
-✅ Download link
+---
 
-✅ Metrics (processing time, department count)
+## 🧮 Efficiency Strategy
 
-🧮 Efficiency Strategy
-✅ Memory-Efficient Design
-CSV files are streamed using fs.createReadStream
+### ✅ Memory Efficient
 
-Processing is done line-by-line with csv-parser
+* **Streaming** with `fs.createReadStream` + `csv-parser`
+* **Write stream** with `fs.createWriteStream`
+* Only the aggregate `Map` is kept in memory
 
-Aggregated data is stored in memory using a Map
+### ✅ Time & Space Complexity
 
-Final file is written with fs.createWriteStream
+| Operation     | Time | Space |
+| ------------- | ---- | ----- |
+| CSV Streaming | O(n) | O(d)  |
+| Aggregation   | O(n) | O(d)  |
+| File Writing  | O(d) | O(d)  |
 
-✅ Time & Space Complexity
-Operation	Time	Space
-CSV Streaming	O(n)	O(d)
-Aggregation	O(n)	O(d)
-File Writing	O(d)	O(d)
+* `n`: number of rows
+* `d`: number of departments
 
-n: number of rows in the CSV
+---
 
-d: number of unique departments
+## 🔐 API Security
 
-🔐 API Security
-All routes are protected via API key header:
+All routes require a valid API key in the header:
 
-http
-Copy
-Edit
+```
 x-api-key: your_super_secret_key
-🧪 Sample API Usage
-📤 POST /upload
-bash
-Copy
-Edit
+```
+
+---
+
+## 🧪 Sample API Usage
+
+### POST `/upload`
+
+```bash
 curl -X POST http://localhost:3000/upload \
   -H "x-api-key: your_super_secret_key" \
   -F "file=@sales.csv"
-📥 GET /download/:fileId
-bash
-Copy
-Edit
-curl http://localhost:3000/download/your-file-id.csv \
+```
+
+### GET `/download/:fileId`
+
+```bash
+curl http://localhost:3000/download/uuid-filename.csv \
   -H "x-api-key: your_super_secret_key"
+```
+
+
+
