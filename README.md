@@ -1,113 +1,135 @@
-# Sales CSV Upload and Aggregation App
+📦 CSV Sales Processor – Backend Developer Project
+This is a full-stack application that allows users to upload large CSV files of sales data. The backend streams and processes the CSV to aggregate total sales per department, then returns a downloadable CSV file along with performance metrics.
 
-A full-stack application that allows users to upload CSV files containing sales data, aggregates total sales by department, and provides downloadable processed CSV files. Built with a Node.js/Express backend (TypeScript) and a React/Next.js frontend.
-
----
-
-## Features
-
-- Upload CSV files with sales records
-- Efficient CSV parsing with streaming to handle large files
-- Aggregate sales totals by department
-- Save aggregated data as a new CSV file
-- Serve processed files for download
-- Show upload progress on the frontend
-- Modular backend code with TypeScript typings
-- Centralized error handling middleware
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v16+ recommended)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/yourusername/your-repo.git
-   cd your-repo/backend
-Install backend dependencies:
-
+🚀 How to Run the App
+📁 Clone the Repo
 bash
 Copy
 Edit
+git clone https://github.com/your-username/csv-sales-processor.git
+cd csv-sales-processor
+🛠️ Backend Setup
+bash
+Copy
+Edit
+cd backend
 npm install
-Start the backend server:
-
-bash
-Copy
-Edit
+cp .env.example .env
+# Set your API_KEY in .env
 npm run dev
-In a separate terminal, navigate to the frontend folder and install dependencies:
+Runs on http://localhost:3000
 
+🌐 Frontend Setup
 bash
 Copy
 Edit
-cd ../frontend
+cd frontend
 npm install
 npm run dev
-Open your browser to http://localhost:3000 and start uploading CSV files.
+Runs on http://localhost:3001 (or whichever port Vite/Next.js chooses)
 
-CSV File Format
-The expected CSV input format is:
-
-csv
-Copy
-Edit
-Department Name,Date,Number of Sales
-Electronics,2023-08-01,100
-Clothing,2023-08-01,200
-Electronics,2023-08-02,150
-Project Structure
+🧪 How to Test
+🔬 Unit Tests (Backend)
 bash
 Copy
 Edit
-/backend
-  /services        # Business logic for CSV parsing, aggregation, file saving, error handling
-  /types           # TypeScript interfaces and types
-  /public          # Public directory for processed CSV downloads
-  server.ts        # Express server entrypoint
+cd backend
+npm run test
+This runs unit tests for:
 
-/frontend
-  /components      # React components (FileUploader, UI elements)
-  /pages           # Next.js pages
-  ...
-How It Works
-The frontend allows users to select and upload a CSV file.
+parseCsv (CSV parsing logic)
 
-The file is sent to the backend /upload-csv endpoint using Axios as FormData.
+aggregateSales (sales aggregation logic)
 
-The backend uses a streaming CSV parser to process large files efficiently without high memory consumption.
+fileWriter (writes processed CSV file)
 
-Sales totals are aggregated by department using a Map for O(n) performance.
+Test framework: Jest
+Test coverage is printed in the terminal. To view coverage summary:
 
-The aggregated data is converted back to CSV format and saved in the /public directory.
+bash
+Copy
+Edit
+npm run test:coverage
+📂 File Structure
+pgsql
+Copy
+Edit
+project-root/
+│
+├── backend/
+│   ├── controllers/
+│   │   ├── uploadController.ts
+│   │   └── downloadController.ts
+│   ├── routes/
+│   │   └── index.ts
+│   ├── services/
+│   │   ├── csvProcessor.ts
+│   │   ├── fileWriter.ts
+│   │   └── authMiddleware.ts
+│   ├── utils/
+│   │   └── generateFilename.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── tests/
+│   │   └── csvProcessor.test.ts
+│   ├── public/processed/  <-- generated downloadable files
+│   └── server.ts
+│
+├── frontend/
+│   ├── pages/ or app/
+│   │   └── index.tsx
+│   ├── components/
+│   │   └── FileUploader.tsx
+│   └── styles/
+│
+├── .env
+├── .gitignore
+└── README.md
+🧠 Algorithm Explanation
+✅ What it does:
+Reads CSV with stream-based parser (csv-parser)
 
-The backend responds with a download URL for the processed file.
+Aggregates sales totals per department using a Map
 
-The frontend shows upload progress and displays the download link when ready.
+Writes the output as a new CSV file using fs.createWriteStream
 
-Memory Handling
-Files are streamed during parsing and writing to avoid loading entire files into memory.
+Generates a UUID-named file for download
 
-Multer temporarily stores file uploads in memory before processing.
+Returns metrics (processing time and department count) in the response
 
-This design enables handling of large CSV files efficiently.
+🧮 Memory Efficiency Strategy:
+✅ Uses streaming (fs.createReadStream) to avoid loading the entire CSV into memory
 
-Time and Space Complexity
-Operation	Time Complexity	Space Complexity
-Streaming CSV Parse	O(n)	O(1) (line-by-line processing)
-Aggregation	O(n)	O(k) where k = unique departments
-Writing CSV Output	O(k)	O(1) (streamed output)
+✅ Processes line by line with csv-parser
 
-Error Handling
-Centralized Express middleware handles errors.
+✅ Aggregates in-memory using a Map (O(1) insert/lookup)
 
-Returns JSON error responses with appropriate HTTP status codes.
+✅ Writes output using fs.createWriteStream to avoid buffering large strings
 
-Logs errors server-side for easier debugging.
+This makes the app capable of processing very large CSV files without crashing.
+
+📈 Estimated Time & Space Complexity
+Step	Time Complexity	Space Complexity
+CSV Parsing (stream)	O(n)	O(d)
+Aggregation	O(n)	O(d)
+File Writing	O(d)	O(d)
+
+n: number of rows in the CSV
+
+d: number of unique departments (usually small)
+
+Streaming ensures space is not dependent on n, which keeps memory usage low.
+
+🔐 API Security
+Upload and download routes are protected with an API key
+
+Users must include the x-api-key header in every request
+
+Example:
+
+bash
+Copy
+Edit
+curl -X POST http://localhost:3000/upload \
+  -H "x-api-key: your_secret_key" \
+  -F "file=@sales.csv"
