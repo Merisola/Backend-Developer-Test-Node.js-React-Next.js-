@@ -1,135 +1,136 @@
 📦 CSV Sales Processor – Backend Developer Project
-This is a full-stack application that allows users to upload large CSV files of sales data. The backend streams and processes the CSV to aggregate total sales per department, then returns a downloadable CSV file along with performance metrics.
+This project is a Node.js + TypeScript backend for processing large CSV files via streaming. It aggregates department sales, writes a downloadable CSV, and returns processing metrics.
 
 🚀 How to Run the App
-📁 Clone the Repo
+1. Clone & Install
 bash
 Copy
 Edit
 git clone https://github.com/your-username/csv-sales-processor.git
-cd csv-sales-processor
-🛠️ Backend Setup
-bash
-Copy
-Edit
-cd backend
+cd csv-sales-processor/backend
 npm install
-cp .env.example .env
-# Set your API_KEY in .env
-npm run dev
-Runs on http://localhost:3000
+2. Set Up Environment Variables
+Create a .env file in the backend root:
 
-🌐 Frontend Setup
+ini
+Copy
+Edit
+API_KEY=your_super_secret_key
+3. Start the Server (Dev Mode)
 bash
 Copy
 Edit
-cd frontend
-npm install
 npm run dev
-Runs on http://localhost:3001 (or whichever port Vite/Next.js chooses)
+Your server will be running at:
+📍 http://localhost:3000
 
 🧪 How to Test
-🔬 Unit Tests (Backend)
+Run Unit Tests
 bash
 Copy
 Edit
-cd backend
 npm run test
-This runs unit tests for:
-
-parseCsv (CSV parsing logic)
-
-aggregateSales (sales aggregation logic)
-
-fileWriter (writes processed CSV file)
-
-Test framework: Jest
-Test coverage is printed in the terminal. To view coverage summary:
-
+View Coverage Report
 bash
 Copy
 Edit
 npm run test:coverage
+Tests cover:
+
+csvProcessor.ts
+
+fileWriter.ts
+
+Aggregation and parsing logic
+
 📂 File Structure
 pgsql
 Copy
 Edit
-project-root/
+backend/
 │
-├── backend/
-│   ├── controllers/
+├── public/                     # Processed CSVs for download
+│
+├── src/
+│   ├── controller/
 │   │   ├── uploadController.ts
-│   │   └── downloadController.ts
+│   │   ├── downloadController.ts
+│   │   └── statusController.ts
+│   │
+│   ├── middleware/
+│   │   └── upload.ts           # Async error wrapper
+│   │
+│   ├── queues/
+│   │   ├── csvQueue.ts
+│   │   └── uploadQueue.ts
+│   │
 │   ├── routes/
-│   │   └── index.ts
+│   │   ├── upload.ts
+│   │   ├── uploadRoutes.ts
+│   │   └── downloadRoutes.ts
+│   │
 │   ├── services/
+│   │   ├── authMiddleware.ts
 │   │   ├── csvProcessor.ts
 │   │   ├── fileWriter.ts
-│   │   └── authMiddleware.ts
-│   ├── utils/
-│   │   └── generateFilename.ts
+│   │   └── errorHandler.ts
+│   │
 │   ├── types/
-│   │   └── index.ts
-│   ├── tests/
-│   │   └── csvProcessor.test.ts
-│   ├── public/processed/  <-- generated downloadable files
-│   └── server.ts
-│
-├── frontend/
-│   ├── pages/ or app/
-│   │   └── index.tsx
-│   ├── components/
-│   │   └── FileUploader.tsx
-│   └── styles/
-│
-├── .env
-├── .gitignore
-└── README.md
-🧠 Algorithm Explanation
-✅ What it does:
-Reads CSV with stream-based parser (csv-parser)
+│   │   └── index.d.ts
+│   │
+│   
+🧠 Algorithm & Design
+🔄 How it Works
+User uploads a .csv file
 
-Aggregates sales totals per department using a Map
+csvProcessor.ts streams the CSV (via csv-parser)
 
-Writes the output as a new CSV file using fs.createWriteStream
+Rows are processed line-by-line, and sales are aggregated by department
 
-Generates a UUID-named file for download
+Results are passed to fileWriter.ts to generate a new CSV file
 
-Returns metrics (processing time and department count) in the response
+The backend responds with:
 
-🧮 Memory Efficiency Strategy:
-✅ Uses streaming (fs.createReadStream) to avoid loading the entire CSV into memory
+A download URL
 
-✅ Processes line by line with csv-parser
+Metrics: processing time, total departments
 
-✅ Aggregates in-memory using a Map (O(1) insert/lookup)
+🧮 Efficiency Strategy
+✅ Memory Efficient
+Streaming with fs.createReadStream + csv-parser
 
-✅ Writes output using fs.createWriteStream to avoid buffering large strings
+Write stream with fs.createWriteStream
 
-This makes the app capable of processing very large CSV files without crashing.
+Only the aggregate Map is kept in memory
 
-📈 Estimated Time & Space Complexity
-Step	Time Complexity	Space Complexity
-CSV Parsing (stream)	O(n)	O(d)
+✅ Time & Space Complexity
+Operation	Time	Space
+CSV Streaming	O(n)	O(d)
 Aggregation	O(n)	O(d)
 File Writing	O(d)	O(d)
 
-n: number of rows in the CSV
+n: number of rows
 
-d: number of unique departments (usually small)
-
-Streaming ensures space is not dependent on n, which keeps memory usage low.
+d: number of departments
 
 🔐 API Security
-Upload and download routes are protected with an API key
+All routes require a valid API key in the header:
 
-Users must include the x-api-key header in every request
-
-Example:
-
+makefile
+Copy
+Edit
+x-api-key: your_super_secret_key
+🧪 Sample API Usage
+POST /upload
 bash
 Copy
 Edit
 curl -X POST http://localhost:3000/upload \
-  -H "x-api-key: your_secret_key" \
+  -H "x-api-key: your_super_secret_key" \
   -F "file=@sales.csv"
+GET /download/:fileId
+bash
+Copy
+Edit
+curl http://localhost:3000/download/uuid-filename.csv \
+  -H "x-api-key: your_super_secret_key"
