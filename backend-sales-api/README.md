@@ -33,3 +33,11 @@ This project is a full-stack application that allows users to upload large CSV f
 cd backend-sales-api
 npm install
 npm run dev
+
+### Algorithm Explanation
+
+- The CSV is parsed line by line using a streaming parser.
+- Each record is converted to a typed object.
+- A map/object aggregates total sales per department.
+- The aggregated result is serialized back to CSV.
+- This ensures efficient memory use for large files.

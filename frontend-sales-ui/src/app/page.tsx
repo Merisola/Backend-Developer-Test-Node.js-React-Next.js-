@@ -1,45 +1,17 @@
-"use client";
-import React, { useState } from "react";
-import { uploadFile } from "../lib/uploadFile"; // Adjust path as needed
+import FileUploader from "@/components/FileUploader";
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState<number>(0);
-  const [downloadLink, setDownloadLink] = useState<string | null>(null);
-
-  const handleUpload = async () => {
-    if (!file) return;
-    try {
-      const url = await uploadFile(file, setProgress);
-      setDownloadLink(url);
-    } catch (err) {
-      console.error("Upload failed", err);
-    }
-  };
-
   return (
-    <main className="p-4 bg-gray-400">
-      <h1 className="text-xl font-bold mb-4">Upload Sales CSV</h1>
-
-      <input
-        type="file"
-        accept=".csv"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-      />
-
-      <button
-        onClick={handleUpload}
-        className="mt-2 bg-blue-500 text-white p-2 rounded"
-      >
-        Upload
-      </button>
-
-      {progress > 0 && <p>Uploading: {progress}%</p>}
-      {downloadLink && (
-        <p>
-          Download result: <a href={downloadLink}>Click here</a>
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-xl bg-white rounded-xl shadow-md p-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+          Upload CSV File
+        </h1>
+        <p className="text-gray-600 text-sm text-center mb-8">
+          Upload a sales CSV to generate and download a processed file.
         </p>
-      )}
+        <FileUploader />
+      </div>
     </main>
   );
 }
